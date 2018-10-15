@@ -29,8 +29,11 @@ Resources:
                   - codebuild:CreateProject
                   - codepipeline:GetPipeline
                   - codepipeline:CreatePipeline
+                  - codepipeline:StartPipelineExecution
+                  - codepipeline:GetPipelineState
                   - cloudformation:CreateStack
                   - cloudformation:UpdateStack
+                  - cloudformation:DescribeStacks
                   - s3:CreateBucket
                   - iam:GetRole
                   - iam:CreateRole
