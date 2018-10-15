@@ -1,0 +1,68 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ecr:GetAuthorizationToken
+                  - ecr:CreateRepository
+                  - codebuild:CreateProject
+                  - codepipeline:GetPipeline
+                  - codepipeline:CreatePipeline
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - s3:CreateBucket
+                  - iam:GetRole
+                  - iam:CreateRole
+                  - iam:PutRolePolicy
+                  - iam:PassRole
+                  - iam:DeleteRolePolicy
+
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Source:
+        Type: GITHUB
+        Auth:
+          Type: OAUTH
+        Location: https://github.com/carlosafonso/codebuild-tests.git
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - npm install -g cfn-create-or-update
+            build:
+              commands:
+                # this is currently expected to be in cloned repo, but it
+                # likely should be kept somewhere else as it is a common asset
+                - ./create_or_update_pipeline.sh
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/nodejs:8.11.0
+        Type: LINUX_CONTAINER
+      Name: !Ref AWS::StackName
+      ServiceRole: !Ref CodeBuildServiceRole
